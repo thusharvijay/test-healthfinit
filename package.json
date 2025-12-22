@@ -6,6 +6,7 @@
 		"dev": "react-router dev",
 		"build": "react-router build",
 		"start": "react-router-serve ./build/server/index.js",
+		"preview": "npx serve build/client -p 3000",
 		"typecheck": "tsc --noEmit"
 	},
 	"proxy": "https://paatho-backend-2.onrender.com",

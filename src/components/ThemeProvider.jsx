@@ -18,8 +18,12 @@ export function ThemeProvider({ children }) {
 
     if (savedTheme) {
       setTheme(savedTheme);
-    } else if (systemPrefersDark) {
-      setTheme('dark');
+    } else {
+      // Define systemPrefersDark here, inside useEffect where window is available
+      const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (systemPrefersDark) {
+        setTheme('dark');
+      }
     }
 
     setMounted(true);

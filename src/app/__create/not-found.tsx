@@ -1,22 +1,5 @@
-import fg from 'fast-glob';
-import type { Route } from './+types/not-found';
-import { useNavigate } from 'react-router';
+import { useNavigate, useParams } from 'react-router';
 import { useCallback, useEffect, useState } from 'react';
-
-export async function loader({ params }: Route.LoaderArgs) {
-  const matches = await fg('src/**/page.{js,jsx,ts,tsx}');
-  return {
-    path: `/${params['*']}`,
-    pages: matches
-      .sort((a, b) => a.length - b.length)
-      .map((match) => {
-        const url = match.replace('src/app', '').replace(/\/page\.(js|jsx|ts|tsx)$/, '') || '/';
-        const path = url.replaceAll('[', '').replaceAll(']', '');
-        const displayPath = path === '/' ? 'Homepage' : path;
-        return { url, path: displayPath };
-      }),
-  };
-}
 
 interface ParentSitemap {
   webPages?: Array<{
@@ -27,13 +10,26 @@ interface ParentSitemap {
   }>;
 }
 
-export default function CreateDefaultNotFoundPage({
-  loaderData,
-}: {
-  loaderData: Awaited<ReturnType<typeof loader>>;
-}) {
+export default function CreateDefaultNotFoundPage() {
   const [siteMap, setSitemap] = useState<ParentSitemap | null>(null);
+  const [pages, setPages] = useState<Array<{ url: string; path: string }>>([]);
   const navigate = useNavigate();
+  const params = useParams();
+  
+  // Get the current path from params
+  const missingPath = params['*'] || '';
+
+  // Load routes on mount (client-side only)
+  useEffect(() => {
+    // In production, you might want to have a static list of routes
+    // or fetch them from an API
+    const defaultRoutes = [
+      { url: '/', path: 'Homepage' },
+      { url: '/auth', path: '/auth' },
+      { url: '/demo', path: '/demo' },
+    ];
+    setPages(defaultRoutes);
+  }, []);
 
   useEffect(() => {
     if (typeof window !== 'undefined' && window.parent && window.parent !== window) {
@@ -57,11 +53,6 @@ export default function CreateDefaultNotFoundPage({
       };
     }
   }, []);
-  const missingPath = loaderData.path.replace(/^\//, '');
-  const existingRoutes = loaderData.pages.map((page) => ({
-    path: page.path,
-    url: page.url,
-  }));
 
   const handleBack = () => {
     navigate('/');
@@ -191,13 +182,13 @@ export default function CreateDefaultNotFoundPage({
           </div>
         ) : (
           <div className="flex flex-wrap gap-3 w-full max-w-[80rem] mx-auto pb-5 px-2">
-            {existingRoutes.map((route) => (
+            {pages.map((route) => (
               <div
                 key={route.path}
                 className="flex flex-col flex-grow basis-full sm:basis-[calc(50%-0.375rem)] xl:basis-[calc(33.333%-0.5rem)]"
               >
                 <div className="w-full flex-1 flex flex-col items-center ">
-                  <div className="relative w-full max-w-[350px] h-48 sm:h-56 lg:h-64 overflow-hidden rounded-[8px] border border-comeback-gray-75 transition-all group-hover:shadow-md">
+                  <div className="relative w-full max-w-[350px] h-48 sm:h-56 lg:h-64 overflow-hidden rounded-[8px] border border-gray-200 transition-all group-hover:shadow-md">
                     <button
                       type="button"
                       onClick={() => handleSearch(route.url.replace(/^\//, ''))}
